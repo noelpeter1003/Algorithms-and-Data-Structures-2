@@ -35,7 +35,7 @@ public class BusManagementSystem {
 	public static int countLines(String fileName) {
 		int lines = 0;
 		try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-			while (reader.readLine() != null)
+			while (reader.readLine() != null) 
 				lines++;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -44,28 +44,6 @@ public class BusManagementSystem {
 	}
 	
 	public static void makeGraph(String fileName){
-		int N = countLines(fileName);
-		int S = countLines(stops);
-		Graph graph = new Graph(S);
-		if (fileName != null) {
-			try {
-				BufferedReader reader = new BufferedReader(new FileReader(fileName));
-				reader.readLine();
-				for (int i = 0; i < N-1; i++) {
-					String line = reader.readLine();
-					String[] parameters = line.trim().split(",");
-					int source = Integer.parseInt(parameters[0]);
-					int destination = Integer.parseInt(parameters[1]);
-					float weight;
-					if(Float.parseFloat(parameters[2]) == 0)
-						weight = 2;
-					else 
-						weight = (Float.parseFloat(parameters[3])/100);
-					Graph.addEgde(source, destination, weight);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		
 	}
 }
