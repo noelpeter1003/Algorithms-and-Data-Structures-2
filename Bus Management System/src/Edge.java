@@ -1,11 +1,11 @@
 public class Edge {
+	int from;
+	int to;
 	float weight;
-	int src;
-	int dst;
 
-	Edge(float weight, int src, int dst) {
-		this.dst = dst;
-		this.src = src;
+	Edge(int from, int to, float weight) {
+		this.from = from;
+		this.to = to;
 		this.weight = weight;
 	}
 
@@ -16,12 +16,11 @@ public class Edge {
 		return this.weight;
 	}
 
-	int getSrc() {
-		return this.src;
+	int getFrom() {
+		return this.from;
 	}
 
-	int getDst() {
-		return this.dst;
+	int getTo() {
+		return this.to;
 	}
-
 }
