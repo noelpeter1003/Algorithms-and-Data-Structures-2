@@ -7,13 +7,11 @@ public class BusManagementSystem {
 	static String stops = "stops.txt";
 	static String stop_times = "stop_times.txt";
 	static String transfers = "transfers.txt";
-	private int distance;
-	private ArrayList<Integer> path;
-	private int estimated;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		Scanner input = new Scanner(System.in);
-		System.out.println("Hi and Welcome to Vancouver's Bus Management System. Please choose one of the options below : ");
+		System.out.println(
+				"Hi and Welcome to Vancouver's Bus Management System. Please choose one of the options below : ");
 		System.out.println("1. Find the shortest path from any bus stop to your destination.");
 		System.out.println("2. Bus Stop Info : Search by full name or by the first few characters of the name.");
 		System.out.println("3. All trips of your choice by arrival time.");
@@ -74,6 +72,7 @@ public class BusManagementSystem {
 			if (!quit) {
 				String[] result;
 				try {
+					System.out.println("Please wait for a few moments.......");
 					result = getShortestRoute(inputStopA, inputStopB);
 				} catch (IOException e) {
 					result = new String[0];
@@ -92,26 +91,49 @@ public class BusManagementSystem {
 			}
 
 		} else if (choice == 2) {
+			String inputName = "";
 			boolean validInput2 = false;
-			String inputString = "";
+			input.nextLine();
 			while (!validInput2 && !quit) {
-				System.out.print("Enter the bus stop name:");
-				inputString = input.next();
-				if (inputString.equalsIgnoreCase("exit")) {
+				System.out.print("Please enter the Full Name of the stop you'd find information about : ");
+				inputName = input.nextLine();
+				if (inputName.equalsIgnoreCase("exit")) {
 					quit = true;
-				} else if (Pattern.matches(".*[a-zA-Z]+.*", inputString)) {
+				} else if (Pattern.matches(".*[a-zA-Z]+.*", inputName)) {
 					validInput2 = true;
 				} else {
-					System.out.println("Please input text with at least one letter");
+					System.out.println("Please enter full name of the bus stop.");
 				}
 			}
 			if (!quit) {
-				String[] results = new String[] { "" };// getStopInformation(inputString.toUpperCase());
-				if (results.length == 0) {
-					System.out.println("There are no stops with this name");
-				} else {
-					for (int i = 0; i < results.length; i++) {
-						System.out.println(results[i]);
+				TST<Integer> st = new TST<Integer>();
+				int N = countLines(stops);
+				String[] stopName;
+				String newStopName;
+				int stopNumber;
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(stops));
+					br.readLine();
+					for (int i = 0; i < N - 1; i++) {
+						String line = br.readLine();
+						String[] arr1 = line.split(",");
+						stopNumber = Integer.parseInt(arr1[0]);
+						stopName = arr1[2].split(" ");
+						newStopName = reverse(stopName);
+						st.put(newStopName, stopNumber);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				BufferedReader br = new BufferedReader(new FileReader(stops));
+				String[] fields = br.readLine().split(",");
+				for (int i = 0; i < N - 1; i++) {
+					String line = br.readLine();
+					String[] arr1 = line.split(",");
+					if (st.get(inputName) == Integer.parseInt(arr1[0])) {
+						for (int j = 0; j < (fields.length - 3); j++)
+							System.out.println(fields[j] + " is " + arr1[j]);
+						break;
 					}
 				}
 			}
@@ -162,6 +184,7 @@ public class BusManagementSystem {
 				}
 			}
 			if (!quit) {
+				System.out.println("Please wait for a few moments.......");
 				String[] result = searchByTime(inputString);
 				if (result.length == 0) {
 					System.out.println("No trips exist with this arrival time");
@@ -172,10 +195,9 @@ public class BusManagementSystem {
 				}
 			}
 		}
-		System.out.println("Exited");
 		System.out.println("Thanks for using the System, Hope to See You Again!!");
 	}
-	
+
 	public static int countLines(String fileName) {
 		int lines = 0;
 		try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
@@ -186,7 +208,8 @@ public class BusManagementSystem {
 		}
 		return lines;
 	}
-//Part 1
+
+	// Part 1
 	public static String[] getShortestRoute(String stop1, String stop2) throws IOException {
 		int largestStopNumber = 0;
 		BufferedReader stops = new BufferedReader(new FileReader("stops.txt"));
@@ -222,7 +245,6 @@ public class BusManagementSystem {
 			} else if (!stop1Found && !stop2Found) {
 				return new String[] { "3" };
 			}
-			// otherwise it will continue to the rest of the function
 		} catch (FileNotFoundException e) {
 			System.out.println("FIle not found!");
 		}
@@ -238,10 +260,7 @@ public class BusManagementSystem {
 		String stopTimesLastLine = stopTimes.readLine();
 		String stopTimesCurrentLine = stopTimes.readLine();
 		String transfersCurrentLine = stopTransfers.readLine();
-//		stopTimesCurrentLine = stopTimes.readLine();						
-//		transfersCurrentLine = stopTransfers.readLine();
 		transfersCurrentLine = stopTransfers.readLine();
-
 
 		String[] stopTimesLastLineComponents;
 		String[] stopTimesCurrentLineComponents;
@@ -272,94 +291,114 @@ public class BusManagementSystem {
 		String[] result = Graph.djikstrasAlgorithm(stop1ID, stop2ID);
 		return result;
 	}
-//Part 3
-	public static String[] searchByTime(String inputString) {
-	    List<Pair> temp = new LinkedList<>();
-	    String readString = "";
-	    String[] splitStrings = new String[9];
-	    File fileObj = new File(stop_times);
-	    try {
-	      Scanner inputFile = new Scanner(fileObj);
-	      String tripId = "";
-	      Boolean tripValid = false;
-	      String stopsInTrip = "";
-	      while (inputFile.hasNextLine()) {
-	        readString = inputFile.nextLine();
-	        splitStrings = readString.split(",");
-	        if (splitStrings.length > 2 && checkValidTime(splitStrings[1])) {
-	          if (splitStrings[0].compareTo(tripId) != 0) {
-	            if (tripValid) {
-	            	temp.add(new Pair(tripId, stopsInTrip));
-	            }
-	            tripValid = false;
-	            stopsInTrip = splitStrings[3];
-	            tripId = splitStrings[0];
-	          } else {
-	        	  stopsInTrip += " -> " + splitStrings[3];
-	          }
-	          if (compareTimes(inputString, splitStrings[1])) {
-	        	  tripValid = true;
-	          }
-	        }
-	      }
-	      if (tripValid) {
-	    	  temp.add(new Pair(tripId, stopsInTrip));
-	      }
-	      if (temp.size() == 0) {
-	    	  inputFile.close();
-	        return new String[0];
-	      }
-	      String[] array = new String[temp.size()];
-	      Collections.sort(temp);
-	      int i = 0;
-	      for (Pair p : temp) {
-	        array[i++] = "Trip ID is " + p.tripId + " with stops : " + p.stops;
-	      }
-	      inputFile.close();
-	      return array;
-	    } catch (Exception e) {
-	    	System.out.println(e);
-	      return new String[0];
-	    }
-	  }
-	
-	public static Boolean checkValidTime(String time) {
-	    try {
-	      String[] components = time.split(":");
-	      int temp = Integer.parseInt(components[0].trim());
-	      if (temp < 0 || temp > 23) {
-	        return false;
-	      }
-	      for (int i = 1; i <= 2; ++i) {
-	        temp = Integer.parseInt(components[i]);
-	        if (temp < 0 || temp > 59) {
-	          return false;
-	        }
-	      }
-	      return true;
-	    } catch (Exception e) {
-	      return false;
-	    }
-	  }
 
-	  public static Boolean compareTimes(String time1, String time2) {
-	    try {
-	      String[] components1 = time1.split(":");
-	      String[] components2 = time2.split(":");
-	      if (components1.length != components2.length) {
-	        return false;
-	      }
-	      int temp1 = 0, temp2 = 0;
-	      for (int i = 0; i < components1.length; ++i) {
-	        temp1 = Integer.parseInt(components1[i].trim());
-	        temp2 = Integer.parseInt(components2[i].trim());
-	        if (temp1 != temp2) {
-	        	return false;
-	        }
-	      }
-	      return true;
-	    } catch (Exception e) {
-	      return false;
-	    }
-	  }
+	// Part2
+	public static String reverse(String[] stopName) {
+		StringBuilder str = new StringBuilder();
+		if (stopName[0].equals("WB") | stopName[0].equals("EB") | stopName[0].equals("SB") | stopName[0].equals("NB")) {
+			for (int i = 1; i < stopName.length; i++) {
+				str.append(stopName[i]);
+				str.append(" ");
+			}
+			str.append(stopName[0]);
+		} else {
+			for (int i = 0; i < stopName.length; i++) {
+				str.append(stopName[i]);
+				str.append(" ");
+			}
+			str.delete(str.length() - 1, str.length());
+		}
+		return str.toString();
+	}
+
+	// Part 3
+	public static String[] searchByTime(String inputString) {
+		List<Pair> temp = new LinkedList<>();
+		String readString = "";
+		String[] splitStrings = new String[9];
+		File fileObj = new File(stop_times);
+		try {
+			Scanner inputFile = new Scanner(fileObj);
+			String tripId = "";
+			Boolean tripValid = false;
+			String stopsInTrip = "";
+			while (inputFile.hasNextLine()) {
+				readString = inputFile.nextLine();
+				splitStrings = readString.split(",");
+				if (splitStrings.length > 2 && checkValidTime(splitStrings[1])) {
+					if (splitStrings[0].compareTo(tripId) != 0) {
+						if (tripValid) {
+							temp.add(new Pair(tripId, stopsInTrip));
+						}
+						tripValid = false;
+						stopsInTrip = splitStrings[3];
+						tripId = splitStrings[0];
+					} else {
+						stopsInTrip += " -> " + splitStrings[3];
+					}
+					if (compareTimes(inputString, splitStrings[1])) {
+						tripValid = true;
+					}
+				}
+			}
+			if (tripValid) {
+				temp.add(new Pair(tripId, stopsInTrip));
+			}
+			if (temp.size() == 0) {
+				inputFile.close();
+				return new String[0];
+			}
+			String[] array = new String[temp.size()];
+			Collections.sort(temp);
+			int i = 0;
+			for (Pair p : temp) {
+				array[i++] = "Trip ID is " + p.tripId + " with stops : " + p.stops;
+			}
+			inputFile.close();
+			return array;
+		} catch (Exception e) {
+			System.out.println(e);
+			return new String[0];
+		}
+	}
+
+	public static Boolean checkValidTime(String time) {
+		try {
+			String[] components = time.split(":");
+			int temp = Integer.parseInt(components[0].trim());
+			if (temp < 0 || temp > 23) {
+				return false;
+			}
+			for (int i = 1; i <= 2; ++i) {
+				temp = Integer.parseInt(components[i]);
+				if (temp < 0 || temp > 59) {
+					return false;
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public static Boolean compareTimes(String time1, String time2) {
+		try {
+			String[] components1 = time1.split(":");
+			String[] components2 = time2.split(":");
+			if (components1.length != components2.length) {
+				return false;
+			}
+			int temp1 = 0, temp2 = 0;
+			for (int i = 0; i < components1.length; ++i) {
+				temp1 = Integer.parseInt(components1[i].trim());
+				temp2 = Integer.parseInt(components2[i].trim());
+				if (temp1 != temp2) {
+					return false;
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
 }

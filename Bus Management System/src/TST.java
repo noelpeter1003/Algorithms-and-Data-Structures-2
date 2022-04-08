@@ -4,7 +4,7 @@ import java.util.List;
 public class TST<Value> {
 	private int size;
 	private Node<Value> root;
-
+//name would be the key and the value the bus id
 	private static class Node<Value> {
 		private char c;
 		private Node<Value> left, mid, right;
